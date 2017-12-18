@@ -1,21 +1,49 @@
 #!/usr/local/bin/python3.6
 
+'''IMPORTS'''
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import pandas as pd
 import numpy as np
+import sys
 
+'''DATA'''
 cars_df = pd.read_csv("car_specs.csv")
 
-porsche_df = cars_df.loc[cars_df['make'] == "Porsche"]
-bmw_df = cars_df.loc[cars_df['make'] == "BMW"]
+# Strip extra white space from values in columns that have string values
+for col_name in list(cars_df.columns.values):
+	if isinstance(cars_df[col_name][0], str):
+		cars_df[col_name] = cars_df[col_name].str.strip()
 
-print(porsche_df.describe())
-print(bmw_df.describe())
+commands = ["makelist"]
 
-# Find the average price of a car with 0 - 60 accel. time less than or equal to 4.0 s
-accel_filter = (cars_df["acceleration"] <= 4.0)
-accel_filtered_df = cars_df[accel_filter]
+if (sys.argv[1] == "makelist"):
+	for make in cars_df.make.unique():
+		print(make)	
 
-print(accel_filtered_df.mean())
+	desired_make = input("Which make are you interested in? ")
+	
+	# List all models made by "desired_make" company	
+	make_filter = (cars_df["make"] == desired_make)
+	make_filtered_df = cars_df[make_filter]
+	
+	print("The latest models made by " + desired_make + " are as follows:\n")	
+	for model in make_filtered_df.model.unique():
+		print(model) 
 
-print(cars_df.corr())
+	desired_model = input("Which model are you interested in? ")
+	
+	# Create string corresponding to name of model's image file	
+	model_img_str = desired_model.lower().replace(" ", "_")
+	img_path = "car_pics/" + desired_make + "/" + model_img_str + ".png"
+	
+	try:
+		model_img = mpimg.imread(img_path)
+	except FileNotFoundError:
+		img_path = img_path.replace(".png", ".jpg")	
+		model_img = mpimg.imread(img_path)
+	
+	plt.imshow(model_img)
+	plt.show()
+		
+
