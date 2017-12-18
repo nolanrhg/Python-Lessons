@@ -26,6 +26,13 @@ def get_percentile(obs, data):
 ## Read in car specs data
 cars_df = pd.read_csv("car_specs.csv")
 
+## Clean up the data
+for make in cars_df.make.unique():
+	make_filter = (cars_df['make'] == make)
+	make_filtered_df = cars_df[make_filter]
+	for col_name in list(cars_df.columns.values):
+		make_filtered_df[[col_name]] = make_filtered_df[[col_name]].fillna(make_filtered_df[col_name].mean())
+
 ## Strip extra white space from values in columns that have string values
 for col_name in list(cars_df.columns.values):
 	if isinstance(cars_df[col_name][0], str):
@@ -64,7 +71,11 @@ except FileNotFoundError:
 ## Display selected model's horsepower percentile on graph
 obs_filter = (make_filtered_df["model"] == desired_model)
 obs_df = make_filtered_df[obs_filter]
-obs = obs_df.iloc[0]['horsepower']
+hp_obs = obs_df.iloc[0]['horsepower']
+
+# top speed obs
+ts_obs = obs_df.iloc[0]['top_speed']
+print(ts_obs)
 
 ## Display image of car model requested by user
 ax1.imshow(model_img)
@@ -73,26 +84,39 @@ for spine in ['top', 'bottom', 'left', 'right']:
 	ax1.spines[spine].set_visible(False)
 ax1.get_xaxis().set_visible(False)
 ax1.get_yaxis().set_visible(False)
-ax1.text(10, 20, 'Horsepower: %d hp' % obs, fontweight = 'bold')
+ax1.text(10, 20, 'Horsepower: %d hp' % hp_obs, fontweight = 'bold')
 
 ## Compare horsepower of selected model with all other models
-make_filtered_df.loc[make_filtered_df['horsepower'].isnull()] = make_filtered_df["horsepower"].mean()
-n, bins, h_bars = ax2.hist(make_filtered_df["horsepower"].values, bins = 20, 
+n1, bins1, h_bars1 = ax2.hist(make_filtered_df["horsepower"].values, bins = 20, 
 			   histtype = "bar", edgecolor = 'black', linewidth = 1.5, normed = True,
 			   color = 'lightblue')
 ax2.set_title(desired_make + " " + "Horsepower Distribution", fontweight = "bold")
 ax2.set_xlabel("Horsepower")
 
-for i, edge in zip(range(0, len(bins) - 1), bins):
-	if (obs > edge):
-		h_bars[i].set_color('green')		
-		h_bars[i].set(edgecolor = 'k')
-		h_bars[i].set(linewidth = 1.5)
-	else:
-		continue
+for i, edge in zip(range(0, len(bins1) - 1), bins1):
+	if (hp_obs > edge):
+		h_bars1[i].set_color('green')		
+		h_bars1[i].set(edgecolor = 'k')
+		h_bars1[i].set(linewidth = 1.5)
 
-hp_pctl = get_percentile(obs, make_filtered_df["horsepower"].values)
+hp_pctl = get_percentile(hp_obs, make_filtered_df["horsepower"].values)
+ax2.text(500, 0.01, 'Percentile: %.1f' % (100 * hp_pctl), fontweight = 'bold')
 
-ax2.text(500, 0.01, 'Percentile: %.1f' % (100 *hp_pctl), fontweight = 'bold')
+## Compare acceleration of selected model with all other models
+n2, bins2, h_bars2 = ax3.hist(make_filtered_df['top_speed'].values, bins = 20,
+			      histtype = 'bar', edgecolor = 'black', linewidth = 1.5, normed = True,
+			      color = 'lightblue')
+ax3.set_title(desired_make + " " + "Top Speed Distribution", fontweight = 'bold')
+ax3.set_xlabel("Top Speed")
+
+print(make_filtered_df['top_speed'].values)
+
+for i, edge in zip(range(0, len(bins2) - 1), bins2):
+	if (ts_obs > edge):
+		h_bars2[i].set_color('green')
+		h_bars2[i].set(edgecolor = 'k')
+		h_bars2[i].set(linewidth = 1.5)
+ts_pctl = get_percentile(ts_obs, make_filtered_df['top_speed'].values)
+ax3.text(150, 0.01, 'Percentile: %.1f' % (100 * ts_pctl), fontweight = 'bold')
 	
 plt.show()
