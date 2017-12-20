@@ -1,7 +1,11 @@
 #!/usr/local/bin/python3.6
 
 
-'''IMPORTS'''
+"""**************************************************
+*						    *
+*			IMPORTS			    *
+*						    *
+**************************************************"""
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import pandas as pd
@@ -9,39 +13,92 @@ import numpy as np
 import sys
 
 
-'''FUNCTIONS'''
+"""**************************************************
+*						    *
+*	              FUNCTIONS			    *
+*						    *
+**************************************************"""
 def get_percentile(obs, data):
+
+
+	"""Find an observation's percentile"""
+
 	
-	# Counts observations less than or equal to obs	
+	# Counts observations in data that are less than or equal to obs	
 	obs_lte = 0
+
 	for d in data:
+
 		if d <= obs:
 			obs_lte += 1
 	
-	# Calculate percentile
-	pctl = (obs_lte * 1.0) / len(data)		
+	# Percentile calculation 
+	pctl = 100 * ((obs_lte * 1.0) / len(data))
 	
 	# Return percentile to caller
 	return pctl
 
 
-'''ACQUIRE DATA'''
+def strip_white_space(df):
+
+
+	"""Strip leading and trailing white space from any strings in the dataframe"""
+
+	
+	for col_name in list(df.columns.values):
+
+		if isinstance(df[col_name][0], str):
+			df[col_name] = df[col_name].str.strip()
+
+
+def replace_na_with_col_mean(df, colname, categories):
+	
+
+	"""Replaces NA values in dataframe with corresponding column mean,
+	   where the data is grouped according to the categories in the 
+	   provided column name (colname)."""
+	
+	print("\n\n\nTEST\n\n\n")	
+	
+	## First find columns that this method cannot be applied to
+	## (i.e., columns that don't contain numbers)
+	blacklist = []
+	for col_name in list(df.columns.values):
+		if isinstance(df[col_name][0], str):
+			blacklist.append(col_name)		
+
+	## Replace NA values in non-blacklisted columns
+	for c in categories:
+
+		category_filter = (df[colname] == c)
+		category_filtered_df = df[category_filter]
+
+		for col_name in list(set(df.columns.values).difference(blacklist)):
+
+			df[[col_name]] = df[[col_name]].fillna(category_filtered_df[col_name].mean())
+
+
+
+"""**************************************************
+*						    *
+*	         DATA ACQUISITION		    *
+*						    *
+**************************************************"""
 ## Read in car specs data
 cars_df = pd.read_csv("car_specs.csv")
 
 
-'''CLEAN DATA'''
-## Strip extra white space from values in columns that have string values
-for col_name in list(cars_df.columns.values):
-	if isinstance(cars_df[col_name][0], str):
-		cars_df[col_name] = cars_df[col_name].str.strip()
-
-## Replace NA values with column mean
-for make in cars_df.make.unique():
-	make_filter = (cars_df['make'] == make)
-	make_filtered_df = cars_df[make_filter]
-	for col_name in list(set(cars_df.columns.values).difference(['make', 'model'])):
-		cars_df[[col_name]] = cars_df[[col_name]].fillna(make_filtered_df[col_name].mean())
+"""**************************************************
+*						    *
+*	         DATA CLEANING		            *
+*						    *
+**************************************************"""
+## Strip white leading and trailing white space from strings in cars dataframe
+strip_white_space(cars_df)
+print('\n\n\n')
+print(cars_df)
+print('\n\n\n')
+replace_na_with_col_mean(cars_df, 'make', cars_df['make'].unique())
 
 
 '''GET USER INPUT'''
@@ -114,7 +171,7 @@ y2 = list(b.get_height() for b in h_bars1)
 ax2.plot(x2, y2, color = 'black', linewidth = 1.5, alpha = 0.8, linestyle = '-.')
 
 hp_pctl = get_percentile(hp_obs, make_filtered_df["horsepower"].values)
-#ax2.text(500, 0.01, 'Percentile: %.1f' % (100 * hp_pctl), fontweight = 'bold')
+#ax2.text(500, 0.01, 'Percentile: %.1f' % hp_pctl, fontweight = 'bold')
 
 ## Compare acceleration of selected model with all other models
 ax3.grid(color = 'k', linestyle = '-', linewidth = 0.3)
@@ -137,6 +194,6 @@ y3 = list(b.get_height() for b in h_bars2)
 ax3.plot(x3, y3, color = 'black', linewidth = 1.5, alpha = 0.8, linestyle = '-.')
 
 ts_pctl = get_percentile(ts_obs, make_filtered_df['top_speed'].values)
-#ax3.text(150, 0.01, 'Percentile: %.1f' % (100 * ts_pctl), fontweight = 'bold')
+#ax3.text(150, 0.01, 'Percentile: %.1f' % ts_pctl, fontweight = 'bold')
 	
 plt.show()
