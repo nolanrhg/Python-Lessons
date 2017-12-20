@@ -58,7 +58,6 @@ def replace_na_with_col_mean(df, colname, categories):
 	   where the data is grouped according to the categories in the 
 	   provided column name (colname)."""
 	
-	print("\n\n\nTEST\n\n\n")	
 	
 	## First find columns that this method cannot be applied to
 	## (i.e., columns that don't contain numbers)
@@ -93,44 +92,60 @@ cars_df = pd.read_csv("car_specs.csv")
 *	         DATA CLEANING		            *
 *						    *
 **************************************************"""
-## Strip white leading and trailing white space from strings in cars dataframe
+## Strip leading and trailing white space from strings in cars dataframe
 strip_white_space(cars_df)
-print('\n\n\n')
-print(cars_df)
-print('\n\n\n')
 replace_na_with_col_mean(cars_df, 'make', cars_df['make'].unique())
 
 
-'''GET USER INPUT'''
+"""**************************************************
+*						    *
+*	          USER INPUT		            *
+*						    *
+**************************************************"""
+# List all car makers
 for make in cars_df.make.unique():
 	print(make)	
+
+# Car make the user is interested in
 desired_make = input("Which make are you interested in? ")
 
 # List all models made by "desired_make" company	
 make_filter = (cars_df["make"] == desired_make)
 make_filtered_df = cars_df[make_filter]
-
-print("The latest models made by " + desired_make + " are as follows:\n")	
 for model in make_filtered_df.model.unique():
 	print(model) 
 
+print("Above is a list of the most recent models made by " + desired_make)	
+
+# Car model the user is interested in
 desired_model = input("Which model are you interested in? ")
 
 
-'''VISUALIZE DATA'''
-# Create string corresponding to name of model's image file	
-model_img_str = desired_model.lower().replace(" ", "_")
-img_path = "car_pics/" + desired_make + "/" + model_img_str + ".png"
+"""**************************************************
+*						    *
+*	          DATA VISUALIZATION	            *
+*						    *
+**************************************************"""
+
+def display_car_image(make, model, ax):
+	
+
+	"""Displays car image on provided set of axes (ax)"""
+	
+	model_img_str = model.lower().replace(" ", "_")	
+	img_path = "car_pics/" + make + "/" + model_img_str + ".png"
+
+	try:
+		model_img = mpimg.imread(img_path)	
+	except FileNotFoundError:
+		img_path = img_path.replace(".png", ".jpg")
+		model_img = mpimg.imread(img_path)	
+	
+	ax.imshow(model_img)
+	
 
 ## Create a figure with 4 subplots for displaying car information
 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows = 2, ncols = 2, figsize = (11, 6))
-
-## Get image of requested car model
-try:
-	model_img = mpimg.imread(img_path)
-except FileNotFoundError:
-	img_path = img_path.replace(".png", ".jpg")	
-	model_img = mpimg.imread(img_path)
 
 ## Display selected model's horsepower percentile on graph
 obs_filter = (make_filtered_df["model"] == desired_model)
@@ -141,7 +156,7 @@ hp_obs = obs_df.iloc[0]['horsepower']
 ts_obs = obs_df.iloc[0]['top_speed']
 
 ## Display image of car model requested by user
-ax1.imshow(model_img)
+display_car_image(desired_make, desired_model, ax1)
 ax1.set_title(desired_make + " " + desired_model, fontweight = 'bold')
 
 for spine in ['top', 'bottom', 'left', 'right']:
