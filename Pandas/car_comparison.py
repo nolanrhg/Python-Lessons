@@ -101,7 +101,7 @@ def get_horsepower(make, model):
 def get_top_speed(make, model):
 
 	
-	"""Get horsepower of desired car"""	
+	"""Get top speed of desired car"""	
 
 	
 	## Filter by car make
@@ -118,7 +118,48 @@ def get_top_speed(make, model):
 	## Return horsepower to caller
 	return ts 
 
+
+def get_accel_time(make, model):
 	
+	
+	"""Get acceleration time of desired car"""
+
+
+	## Filter by car make
+	make_filter = (cars_df['make'] == make)
+	make_filtered_df = cars_df[make_filter]
+
+	## Filter by model
+	model_filter = (make_filtered_df['model'] == model)
+	make_model_filtered_df = make_filtered_df[model_filter]		
+
+	## Get horsepower observation
+	at = make_model_filtered_df.iloc[0]['acceleration_time']	
+
+	## Return horsepower to caller
+	return at
+
+
+def get_price(make, model):
+	
+	
+	"""Get price of desired car"""
+
+
+	## Filter by car make
+	make_filter = (cars_df['make'] == make)
+	make_filtered_df = cars_df[make_filter]
+
+	## Filter by model
+	model_filter = (make_filtered_df['model'] == model)
+	make_model_filtered_df = make_filtered_df[model_filter]		
+
+	## Get horsepower observation
+	price = make_model_filtered_df.iloc[0]['price']	
+
+	## Return horsepower to caller
+	return price 
+
 """**************************************************
 *						    *
 *	         DATA ACQUISITION		    *
@@ -169,7 +210,7 @@ desired_model = input("Which model are you interested in? ")
 *						    *
 **************************************************"""
 
-def display_car_image(make, model, ax, hp, ts, at):
+def display_car_image(make, model, ax):
 	
 
 	"""Displays car image on provided set of axes (ax)"""
@@ -191,38 +232,55 @@ def display_car_image(make, model, ax, hp, ts, at):
 	ax.get_yaxis().set_visible(False)
 	
 	## Add car information to display		
-	ax.set_title(make + " " + model, fontweight = 'bold')
+	ax.set_title(make + " " + model, fontweight = 'bold', fontsize = 8)
 	
-	ax.text(10, 20, 'Horsepower: %d hp' % hp, fontweight = 'bold')
-
 	## Show image of car on ax
 	ax.imshow(model_img)
 
 
-## Create a figure with 4 subplots for displaying car information
-fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows = 2, ncols = 2, figsize = (11, 6))
+def display_car_specs(make, model, ax):
+	
+	hp = get_horsepower(make, model)
+	ts = get_top_speed(make, model)
+	at = get_accel_time(make, model)	
+	p = get_price(make, model)
+	
+	ax.text(0, 1, 'Horsepower:', fontweight = 'bold', fontsize = 8)
+	ax.text(0.5, 1, '%d hp' % hp, color = 'blue', fontsize = 8)
 
-## Display selected model's horsepower percentile on graph
-#obs_filter = (make_filtered_df["model"] == desired_model)
-#obs_df = make_filtered_df[obs_filter]
+	ax.text(0, 0.9, 'Top Speed:', fontweight = 'bold', fontsize = 8)
+	ax.text(0.4, 0.9, '%d mph' % ts, fontsize = 8, color = 'blue')
+
+	ax.text(0, 0.8, '0 - 60 MPH:', fontweight = 'bold', fontsize = 8)
+	ax.text(0.5, 0.8, '%.1f s' %at, fontsize = 8, color = 'blue')
+
+	ax.text(0, 0.7, 'Price:', fontweight = 'bold', fontsize = 8)
+	ax.text(0.3, 0.7, '$%d' %p, color = 'blue', fontsize = 8)
+
+		
+
+
+## Create a figure with 4 subplots for displaying car information
+FIG_WIDTH = 13
+FIG_HEIGHT = 6
+fig, ((ax1, ax2, ax3, ax4), (ax5, ax4, ax6, ax7)) = plt.subplots(nrows = 2, ncols = 4, figsize = (FIG_WIDTH, FIG_HEIGHT))
+fig.subplots_adjust(wspace = 0.5, hspace = 0.3)
+
 hp_obs = get_horsepower(desired_make, desired_model)
 ts_obs = get_top_speed(desired_make, desired_model)
-
-# top speed obs
-#ts_obs = obs_df.iloc[0]['top_speed']
+accel_obs = get_accel_time(desired_make, desired_model)
 
 ## Display image of car model requested by user
-display_car_image(desired_make, desired_model, ax1, hp_obs, ts_obs, ts_obs)
-
-#ax1.text(10, 20, 'Horsepower: %d hp' % hp_obs, fontweight = 'bold')
+display_car_image(desired_make, desired_model, ax1)
+display_car_specs(desired_make, desired_model, ax5)
 
 ## Compare horsepower of selected model with all other models
 ax2.grid(color = 'k', linestyle = '-', linewidth = 0.3)
 ax2.set_facecolor('wheat')
-n1, bins1, h_bars1 = ax2.hist(make_filtered_df["horsepower"].values, bins = 30, 
+n1, bins1, h_bars1 = ax2.hist(make_filtered_df["horsepower"].values, bins = 20, 
 			   histtype = "bar", edgecolor = 'black', linewidth = 1.5, normed = True,
 			   color = 'gray')
-ax2.set_title(desired_make + " " + "Horsepower Distribution", fontweight = "bold")
+ax2.set_title(desired_make + " " + "Horsepower Distribution", fontweight = "bold", fontsize = 8)
 ax2.set_xlabel("Horsepower")
 
 for i, edge in zip(range(0, len(bins1) - 1), bins1):
@@ -242,10 +300,10 @@ hp_pctl = get_percentile(hp_obs, make_filtered_df["horsepower"].values)
 ## Compare acceleration of selected model with all other models
 ax3.grid(color = 'k', linestyle = '-', linewidth = 0.3)
 ax3.set_facecolor('wheat')
-n2, bins2, h_bars2 = ax3.hist(make_filtered_df['top_speed'].values, bins = 30,
+n2, bins2, h_bars2 = ax3.hist(make_filtered_df['top_speed'].values, bins = 20,
 			      histtype = 'bar', edgecolor = 'black', linewidth = 1.5, normed = True,
 			      color = 'gray')
-ax3.set_title(desired_make + " " + "Top Speed Distribution", fontweight = 'bold')
+ax3.set_title(desired_make + " " + "Top Speed Distribution", fontweight = 'bold', fontsize = 8)
 ax3.set_xlabel("Top Speed")
 
 for i, edge in zip(range(0, len(bins2) - 1), bins2):
@@ -261,5 +319,11 @@ ax3.plot(x3, y3, color = 'black', linewidth = 1.5, alpha = 0.8, linestyle = '-.'
 
 ts_pctl = get_percentile(ts_obs, make_filtered_df['top_speed'].values)
 #ax3.text(150, 0.01, 'Percentile: %.1f' % ts_pctl, fontweight = 'bold')
-	
+
+## Remove spines from ax5
+for spine in ['top', 'bottom', 'left', 'right']:
+	ax5.spines[spine].set_visible(False)	
+ax5.get_xaxis().set_visible(False)
+ax5.get_yaxis().set_visible(False)
+
 plt.show()
