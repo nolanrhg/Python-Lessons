@@ -77,13 +77,55 @@ def replace_na_with_col_mean(df, colname, categories):
 			df[[col_name]] = df[[col_name]].fillna(category_filtered_df[col_name].mean())
 
 
+def get_horsepower(make, model):
 
+	
+	"""Get horsepower of desired car"""	
+
+	
+	## Filter by car make
+	make_filter = (cars_df['make'] == make)
+	make_filtered_df = cars_df[make_filter]
+
+	## Filter by model
+	model_filter = (make_filtered_df['model'] == model)
+	make_model_filtered_df = make_filtered_df[model_filter]		
+
+	## Get horsepower observation
+	hp = make_model_filtered_df.iloc[0]['horsepower']	
+
+	## Return horsepower to caller
+	return hp
+
+			
+def get_top_speed(make, model):
+
+	
+	"""Get horsepower of desired car"""	
+
+	
+	## Filter by car make
+	make_filter = (cars_df['make'] == make)
+	make_filtered_df = cars_df[make_filter]
+
+	## Filter by model
+	model_filter = (make_filtered_df['model'] == model)
+	make_model_filtered_df = make_filtered_df[model_filter]		
+
+	## Get horsepower observation
+	ts = make_model_filtered_df.iloc[0]['top_speed']	
+
+	## Return horsepower to caller
+	return ts 
+
+	
 """**************************************************
 *						    *
 *	         DATA ACQUISITION		    *
 *						    *
 **************************************************"""
 ## Read in car specs data
+global cars_df
 cars_df = pd.read_csv("car_specs.csv")
 
 
@@ -127,10 +169,11 @@ desired_model = input("Which model are you interested in? ")
 *						    *
 **************************************************"""
 
-def display_car_image(make, model, ax):
+def display_car_image(make, model, ax, hp, ts, at):
 	
 
 	"""Displays car image on provided set of axes (ax)"""
+
 	
 	model_img_str = model.lower().replace(" ", "_")	
 	img_path = "car_pics/" + make + "/" + model_img_str + ".png"
@@ -141,29 +184,37 @@ def display_car_image(make, model, ax):
 		img_path = img_path.replace(".png", ".jpg")
 		model_img = mpimg.imread(img_path)	
 	
-	ax.imshow(model_img)
+	## Remove spines and axes' ticks/tick labels	
+	for spine in ['top', 'bottom', 'left', 'right']:
+		ax.spines[spine].set_visible(False)	
+	ax.get_xaxis().set_visible(False)
+	ax.get_yaxis().set_visible(False)
 	
+	## Add car information to display		
+	ax.set_title(make + " " + model, fontweight = 'bold')
+	
+	ax.text(10, 20, 'Horsepower: %d hp' % hp, fontweight = 'bold')
+
+	## Show image of car on ax
+	ax.imshow(model_img)
+
 
 ## Create a figure with 4 subplots for displaying car information
 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows = 2, ncols = 2, figsize = (11, 6))
 
 ## Display selected model's horsepower percentile on graph
-obs_filter = (make_filtered_df["model"] == desired_model)
-obs_df = make_filtered_df[obs_filter]
-hp_obs = obs_df.iloc[0]['horsepower']
+#obs_filter = (make_filtered_df["model"] == desired_model)
+#obs_df = make_filtered_df[obs_filter]
+hp_obs = get_horsepower(desired_make, desired_model)
+ts_obs = get_top_speed(desired_make, desired_model)
 
 # top speed obs
-ts_obs = obs_df.iloc[0]['top_speed']
+#ts_obs = obs_df.iloc[0]['top_speed']
 
 ## Display image of car model requested by user
-display_car_image(desired_make, desired_model, ax1)
-ax1.set_title(desired_make + " " + desired_model, fontweight = 'bold')
+display_car_image(desired_make, desired_model, ax1, hp_obs, ts_obs, ts_obs)
 
-for spine in ['top', 'bottom', 'left', 'right']:
-	ax1.spines[spine].set_visible(False)
-ax1.get_xaxis().set_visible(False)
-ax1.get_yaxis().set_visible(False)
-ax1.text(10, 20, 'Horsepower: %d hp' % hp_obs, fontweight = 'bold')
+#ax1.text(10, 20, 'Horsepower: %d hp' % hp_obs, fontweight = 'bold')
 
 ## Compare horsepower of selected model with all other models
 ax2.grid(color = 'k', linestyle = '-', linewidth = 0.3)
